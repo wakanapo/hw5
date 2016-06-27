@@ -1,15 +1,14 @@
 package app
 
 import (
-	"fmt"
 	"net/http"
+	"wordshuffle"
+	"transit"
 )
 
 func init() {
-	http.HandleFunc("/", handlePata)
+	http.HandleFunc("/pata", wordshuffle.HandlePata)
+	http.HandleFunc("/transit", transit.HandleTrinsit)
 }
 
-func handlePata(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	fmt.Fprintf(w, "Hello world!\n")
-}
+

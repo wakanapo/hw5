@@ -1,0 +1,27 @@
+<html>
+    <form action = "transit">
+        <label for="fromStation">出発駅：</label>
+        <select id="fromStation" name="fromStation">
+            {{range .Lines}}
+            {{$lines := .Name}}
+            {{range .Stations}}
+            <option value={{.}}>
+               {{$lines}} - {{.}}
+            </option>
+            {{end}}
+            {{end}}
+        </select><br>
+        <label for="toStation">到着駅：</label>
+        <select id="toStation" name="toStation">
+            {{range .Lines}}
+            {{$lines := .Name}}
+            {{range .Stations}}
+            <option value={{.}}>
+                {{$lines}} - {{.}}
+            </option>
+            {{end}}
+            {{end}}
+        </select><br>
+        <input type=submit value="検索"><br>
+    </form>
+</html>
