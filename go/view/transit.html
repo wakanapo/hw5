@@ -1,12 +1,13 @@
 <html>
     <form action = "transit">
+        <br>
         <label for="fromStation">出発駅：</label>
         <select id="fromStation" name="fromStation">
             {{range .Lines}}
             {{$lines := .Name}}
             {{range .Stations}}
             <option value={{.}}>
-               {{$lines}} - {{.}}
+                {{$lines}} - {{.}}
             </option>
             {{end}}
             {{end}}
