@@ -41,10 +41,10 @@ func HandleTrinsit(w http.ResponseWriter, r *http.Request) {
 	for _, suspend := range suspends {
 		fmt.Fprintf(w, "%s - %s間で運転を見合わせています。</br>", suspend.From, suspend.To)
 	}
-	
 	fromStation := r.FormValue("fromStation")
 	toStation := r.FormValue("toStation")
 	railsMap := setLineStatusFromJson(rails.Lines)
+	fmt.Fprintln(w, railsMap["多摩川"])
 	stationStatus := setStaitionStatus(rails.Lines, suspends)
 	route := searchRoute(fromStation, toStation, railsMap, stationStatus)
 	printRoute(w, route, rails.Lines)
@@ -94,8 +94,8 @@ func searchRoute(fromStation, toStation string, railsMap map[string][]string, su
 
 func setLineStatusFromJson(lines []Line) map[string][]string {
 	var railsMap map[string][]string = make(map[string][]string)
-	frontStation := ""
-	for _, line := range lines {	
+	for _, line := range lines {
+		frontStation := ""
 		for _, station := range line.Stations {
 			railsMap[frontStation] = append(railsMap[frontStation], station)
 			railsMap[station] = append(railsMap[station], frontStation)
@@ -115,16 +115,21 @@ func printRoute(w http.ResponseWriter, route []string, lines []Line) {
 		if len(frontline) > 0 && line != frontline {
 			fmt.Fprintf(w, "（%s）", frontline)
 			fmt.Fprintf(w, "=> ")
-			fmt.Fprintf(w, station)
+			fmt.Fprintf(w, front)
 		}
 		front = station
 		frontline = line
 	}
-	fmt.Fprintf(w, "（%s）", line)
-	fmt.Fprintf(w, "=> ")
-	fmt.Fprintf(w, route[len(route)-1])
-	fmt.Fprintf(w, "（%s）", line)
+	if len(line) > 0 {
+		fmt.Fprintf(w, "（%s）", line)
+		fmt.Fprintf(w, "=> ")
+		fmt.Fprintf(w, route[len(route)-1])
+		fmt.Fprintf(w, "（%s）", line)
+	}
 }
+ 
+
+
 
 func nowLine(lines []Line, front string, now string) string{
 	var nowline string
