@@ -149,38 +149,55 @@ func printRoute(w http.ResponseWriter, route []string, lines []Line) {
 	fmt.Fprint(w, "<br>")
 	fmt.Fprintf(w, route[0])
 	front := route[0]
-	var frontline, line string
+	var frontline, line , frontdirection, direction string
 	for _, station := range route[1:] {
-		line = nowLine(lines, front, station)
+		line, direction = nowLine(lines, front, station)
 		if len(frontline) > 0 && line != frontline {
-			fmt.Fprintf(w, "（%s）", frontline)
-			fmt.Fprintf(w, "=> ")
+			fmt.Fprintf(w, "（%s : %s）", frontline, frontdirection)
+			fmt.Fprintf(w, ">> ")
 			fmt.Fprintf(w, front)
-			fmt.Fprintf(w, "（%s）>>", frontline)
+			fmt.Fprintf(w, "（%s）=> %s", frontline, front)
 		}
 		front = station
 		frontline = line
+		frontdirection = direction
 	}
 	if len(line) > 0 {
-		fmt.Fprintf(w, "（%s）", line)
-		fmt.Fprintf(w, "=> ")
+		fmt.Fprintf(w, "（%s : %s）", line, direction)
+		fmt.Fprintf(w, ">> ")
 		fmt.Fprintf(w, route[len(route)-1])
 		fmt.Fprintf(w, "（%s）", line)
 	}
 }
  
-
-
-
-func nowLine(lines []Line, front string, now string) string{
-	var nowline string
-	for _, line := range lines {
-		if isIncludingTheseStations(line, front, now) {
-			nowline = line.Name
-			return nowline
+func getDirection(line Line, frontStation string, nextStation string) string {
+	for _, station := range line.Stations {
+		if station == frontStation {
+			if line.Name == "山手線" {
+				return "外回り"
+			}
+			return line.Stations[0]	+ "方面行き"
+		}
+		if station == nextStation {
+			if line.Name == "山手線" {
+				return "内回り"
+			}
+			return line.Stations[len(line.Stations) - 1] + "方面行き"
 		}
 	}
-	return nowline
+	return "not such station"
+}
+
+func nowLine(lines []Line, front string, now string) (string, string){
+	var nowline string
+	var line Line
+	for _, line = range lines {
+		if isIncludingTheseStations(line, front, now) {
+			nowline = line.Name
+			return nowline, getDirection(line, front, now)
+		}
+	}
+	return nowline, getDirection(line, front, now)
 }
 
 func isIncludingTheseStations(line Line, station1 string, station2 string) bool {
