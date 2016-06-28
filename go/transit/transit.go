@@ -1,11 +1,15 @@
 package transit
 
 import (
+	"appengine"
+	"appengine/urlfetch"
+	"bytes"
 	"encoding/json"
-	"net/http"
+	"errors"
 	"fmt"
-	"io/ioutil"
 	"html/template"
+	"io/ioutil"
+	"net/http"
 )
 
 type Line struct {
@@ -25,18 +29,30 @@ type Suspend struct {
 func HandleTrinsit(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	file_line, err_line := ioutil.ReadFile("resource/line.json")
-	file_suspend, err_suspend := ioutil.ReadFile("resource/suspend.json")
+	if err_line != nil {
+		fmt.Fprintln(w, "Line File Read Error: ", err_line)
+		return
+	}
+	
+	url := "http://fantasy-transit.appspot.com/outtages?format=json"
+	suspendStr, err := downloadFromUrl(r, url)
+	if err != nil {
+		fmt.Fprintln(w, "Download failure: ", err);
+		return
+	}
 	
 	var rails Rails
 	json_err_line := json.Unmarshal(file_line, &rails.Lines)
-	if err_line != nil {
-		fmt.Fprintln(w, "Format Error: ", json_err_line)
+	if json_err_line != nil {
+		fmt.Fprintln(w, "Line Json Format Error: ", json_err_line)
+		return
 	}
 	
 	var suspends []Suspend
-	json_err_suspend := json.Unmarshal(file_suspend, &suspends)
-	if err_suspend != nil {
-		fmt.Fprintln(w, "Format Error: ", json_err_suspend)
+	json_err_suspend := json.Unmarshal([]byte(suspendStr), &suspends)
+	if json_err_suspend != nil {
+		fmt.Fprintln(w, "Suspend Json Format Error: ", json_err_suspend)
+		return
 	}
 	for _, suspend := range suspends {
 		fmt.Fprintf(w, "%s - %s間で運転を見合わせています。</br>", suspend.From, suspend.To)
@@ -50,8 +66,33 @@ func HandleTrinsit(w http.ResponseWriter, r *http.Request) {
 	t,_ := template.ParseFiles("view/transit.html")
    	if err := t.Execute(w, rails); err != nil {
 		fmt.Println("Failed to build page", err)
+		return
 	}
 }
+
+func downloadFromUrl(r *http.Request, url string) (string, error) {
+	context := appengine.NewContext(r)
+	client := urlfetch.Client(context)
+	if client == nil {
+		return "", errors.New("Client cannot be created")
+	}
+	response, err := client.Get(url)
+	if err != nil {
+		return "", err
+	}
+	if response == nil {
+		return "", errors.New("うおーなんでれすぽんすがぬるなのーーしーーー: " + url)
+	}
+	if response.Body == nil {
+		return "", errors.New("うおーなんでれすぽんすぼでーがぬるなのーーしーーー: " + url)
+	}
+	defer response.Body.Close()
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(response.Body)
+	s := buf.String()
+	return s, nil
+}
+
 
 func makeRoute(route []string, next string) []string {
     k := len(route)
