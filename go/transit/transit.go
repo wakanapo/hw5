@@ -156,6 +156,7 @@ func printRoute(w http.ResponseWriter, route []string, lines []Line) {
 			fmt.Fprintf(w, "（%s）", frontline)
 			fmt.Fprintf(w, "=> ")
 			fmt.Fprintf(w, front)
+			fmt.Fprintf(w, "（%s）>>", frontline)
 		}
 		front = station
 		frontline = line
