@@ -44,7 +44,6 @@ func HandleTrinsit(w http.ResponseWriter, r *http.Request) {
 	fromStation := r.FormValue("fromStation")
 	toStation := r.FormValue("toStation")
 	railsMap := setLineStatusFromJson(rails.Lines)
-	fmt.Fprintln(w, railsMap["多摩川"])
 	stationStatus := setStaitionStatus(rails.Lines, suspends)
 	route := searchRoute(fromStation, toStation, railsMap, stationStatus)
 	printRoute(w, route, rails.Lines)
