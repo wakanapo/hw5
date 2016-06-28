@@ -47,7 +47,7 @@ func HandleTrinsit(w http.ResponseWriter, r *http.Request) {
 	railsMap := setLineStatusFromJson(rails.Lines)
 	stationStatus := setStaitionStatus(rails.Lines, suspends)
 	route := searchRoute(fromStation, toStation, railsMap, stationStatus)
-	printRoute(w, route)
+	printRoute(w, route, rails.Lines)
 	t,_ := template.ParseFiles("view/transit.html")
    	if err := t.Execute(w, rails); err != nil {
 		fmt.Println("Failed to build page", err)
@@ -105,13 +105,36 @@ func setLineStatusFromJson(lines []Line) map[string][]string {
 	return railsMap
 }
 
-func printRoute(w http.ResponseWriter, route []string) {
-	fmt.Fprintf(w, "<br>")
+func printRoute(w http.ResponseWriter, route []string, lines []Line) {
+	fmt.Fprint(w, "<br>")
 	fmt.Fprintf(w, route[0])
+	front := route[0]
+	var frontline, line string
 	for _, station := range route[1:] {
-		fmt.Fprintf(w, "=>")
-		fmt.Fprintf(w, station)
+		line = nowLine(lines, front, station)
+		if len(frontline) > 0 && line != frontline {
+			fmt.Fprintf(w, "（%s）", frontline)
+			fmt.Fprintf(w, "=> ")
+			fmt.Fprintf(w, station)
+		}
+		front = station
+		frontline = line
 	}
+	fmt.Fprintf(w, "（%s）", line)
+	fmt.Fprintf(w, "=> ")
+	fmt.Fprintf(w, route[len(route)-1])
+	fmt.Fprintf(w, "（%s）", line)
+}
+
+func nowLine(lines []Line, front string, now string) string{
+	var nowline string
+	for _, line := range lines {
+		if isIncludingTheseStations(line, front, now) {
+			nowline = line.Name
+			return nowline
+		}
+	}
+	return nowline
 }
 
 func isIncludingTheseStations(line Line, station1 string, station2 string) bool {
