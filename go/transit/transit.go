@@ -170,34 +170,35 @@ func printRoute(w http.ResponseWriter, route []string, lines []Line) {
 	}
 }
  
-func getDirection(line Line, frontStation string, nextStation string) string {
+func getDirection(line Line, frontStation string, nextStation string) (string, bool) {
 	for _, station := range line.Stations {
 		if station == frontStation {
 			if line.Name == "山手線" {
-				return "外回り"
+				return "外回り", true
 			}
-			return line.Stations[0]	+ "方面行き"
+			return line.Stations[len(line.Stations) - 1]	+ "方面行き", true
 		}
 		if station == nextStation {
 			if line.Name == "山手線" {
-				return "内回り"
+				return "内回り", false
 			}
-			return line.Stations[len(line.Stations) - 1] + "方面行き"
+			return line.Stations[0] + "方面行き", false
 		}
 	}
-	return "not such station"
+	return "not such station", false
 }
 
 func nowLine(lines []Line, front string, now string) (string, string){
-	var nowline string
+	var nowline , direction string
 	var line Line
 	for _, line = range lines {
 		if isIncludingTheseStations(line, front, now) {
 			nowline = line.Name
-			return nowline, getDirection(line, front, now)
+			direction, _ = getDirection(line, front, now)
+			return nowline, direction
 		}
 	}
-	return nowline, getDirection(line, front, now)
+	return nowline, direction
 }
 
 func isIncludingTheseStations(line Line, station1 string, station2 string) bool {
@@ -223,6 +224,12 @@ func setStaitionStatus(lines []Line, suspends []Suspend) map[string]bool {
 	for _, line := range lines {
 		for _, suspend := range suspends {
 			if isIncludingTheseStations(line, suspend.From, suspend.To) {
+				_, order := getDirection(line, suspend.From, suspend.To)
+				if !order {
+					from := suspend.From
+					suspend.From = suspend.To
+					suspend.To = from
+				}
 				frag := 0
 				for _, station := range line.Stations{
 					if station == suspend.From {
