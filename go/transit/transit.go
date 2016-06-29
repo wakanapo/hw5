@@ -128,8 +128,8 @@ func searchRoute(fromStation, toStation string, railsMap map[string][]string, su
             }
         }
     }
-	notFound := []string{"ルートが見つかりません"}
-	return notFound
+    notFound := []string{"ルートが見つかりません"}
+    return notFound
 }
 
 func setLineStatusFromJson(lines []Line) map[string][]string {
