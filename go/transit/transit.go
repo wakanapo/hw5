@@ -26,7 +26,7 @@ type Suspend struct {
 	To string `json:"To"`
 }
 
-func HandleTrinsit(w http.ResponseWriter, r *http.Request) {
+func HandleTransit(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	file_line, err_line := ioutil.ReadFile("resource/line.json")
 	if err_line != nil {
